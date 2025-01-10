@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -36,7 +35,7 @@ class UserControllerTest extends TestCase
         ]);
     }
 
-    public function test_signup_invalid_data()
+    public function test_signup_missing_data()
     {
         // Create an invalid request data (missing required fields)
         $data = [
@@ -56,6 +55,50 @@ class UserControllerTest extends TestCase
                 'first_name',
                 'last_name',
             ],
+        ]);
+    }
+
+    public function test_signup_invalid_name()
+    {
+        // Create an invalid request data (missing required fields)
+        $data = [
+            'first_name' => $this->faker->firstName,
+            'last_name' => 'Invalid Last Name12345',
+            'email' => $this->faker->unique()->safeEmail,
+            'type' => 'student',
+        ];
+
+        // Send a POST request to the signUp endpoint
+        $response = $this->post('/api/signup', $data);
+
+        // Assert that the response status is 400 (Bad Request)
+        $response->assertStatus(400);
+
+        // Assert that the response contains validation errors
+        $response->assertJsonStructure([
+            'error',
+        ]);
+    }
+
+    public function test_signup_invalid_email()
+    {
+        // Create an invalid request data (missing required fields)
+        $data = [
+            'first_name' => $this->faker->firstName,
+            'last_name' => $this->faker->lastName,
+            'email' => 'not!valid@email',
+            'type' => 'student',
+        ];
+
+        // Send a POST request to the signUp endpoint
+        $response = $this->post('/api/signup', $data);
+
+        // Assert that the response status is 400 (Bad Request)
+        $response->assertStatus(400);
+
+        // Assert that the response contains validation errors
+        $response->assertJsonStructure([
+            'error',
         ]);
     }
 }

@@ -24,6 +24,13 @@ class UserController extends Controller
             return response()->json(['error' => $validator->errors()], 400);
         }
 
+        // Validate first_name and last_name for invalid characters
+        if (
+            !$this->validateName($request->first_name . $request->last_name)
+        ) {
+            return response()->json(['error' => 'Special characters are not allowed'], 400);
+        }
+
         try {
             // Generate a random password
             $password = Hash::make('your_password_here');
@@ -44,5 +51,17 @@ class UserController extends Controller
         // todo: send notification email
 
         return response()->json(['message' => 'User signed up successfully'], 201);
+    }
+    private function validateName($string)
+    {
+        // Define the allowed characters in the name
+        $allowedCharacters = '/^[a-zA-Z\s\']+$/';
+
+        // Check if the name contains any invalid characters
+        if (!preg_match($allowedCharacters, $string)) {
+            return false;
+        }
+
+        return true;
     }
 }
