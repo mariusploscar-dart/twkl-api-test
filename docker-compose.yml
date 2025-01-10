@@ -1,28 +1,63 @@
 services:
-  webserver:
-    container_name: TwinklTestServer
+  app:
     build:
       context: .
       dockerfile: Dockerfile
+    image: laravel-app
+    container_name: laravel-app
     volumes:
-      - ./www:/var/www
-      - ./php:/usr/local/etc/php/conf.d
+      - .:/var/www
     ports:
-      - 8008:80
-    env_file: .env
+      - "9000:9000"
+    networks:
+      - laravel
     depends_on:
-      - mysql-db
+      - db
 
-  mysql-db:
+  db:
     image: mysql:8.0
-    env_file: .env
+    container_name: laravel-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "33066:3306"
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - laravel
 
-  # phpmyadmin:
-  #   image: phpmyadmin/phpmyadmin
-  #   links:
-  #     - mysql-db
-  #   ports:
-  #     - "8009:80"
-  #   env_file: .env
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: laravel-phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_USER: ${DB_USERNAME}
+      PMA_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8081:80"
+    networks:
+      - laravel
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:alpine
+    container_name: laravel-nginx
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "8080:80"
+    networks:
+      - laravel
+    depends_on:
+      - app
+
+volumes:
+  dbdata:
+
+networks:
+  laravel:
