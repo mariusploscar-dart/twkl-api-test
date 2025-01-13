@@ -55,6 +55,25 @@ Make sure the APP_KEY environment variable is set.
 
 PHPMyAdmin is also available at http://localhost:8081.
 
+## Use the API
+
+Execute an HTTP request with the following parameters:
+
+```
+address: 'http://localhost:8080/api/signup'
+method: 'POST'
+headers: {
+  'Content-Type': 'application/json
+}
+JSON body: {
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "johnny.doe@fantasy.org",
+    "user_type": "student"
+}
+```
+\* values allowed for user_type field : 'student', 'teacher', 'parent', 'private_tutor'
+
 ## Test using the API from a blocked IP address
 
 In your .env file set TEST_BLOCKED_IP_ADDRESS to the IP address used to call the API. You should receive an error saying your IP address is blocked.
