@@ -22,28 +22,78 @@ What we are looking for:
 * Code should be executable (no mis-typed variable names, missing use statements, etc.)
 * Code should be concise and well laid out - no excessive use of blank lines, unused use statements, etc.
 * Commit messages understandable and git history looks sensible
- 
+
 If your solution involves anything that you feel might require further explanation, or if you feel that some element of best practice is not applicable for some reason, please add comments to the code to explain the reason for your decision.
 
 ## Running the project
-To run the project, make sure docker is installed, navigate to the root directory 
-(where Dockerfile and docker-compose.yml are located), and run:
+The project is based on the Laravel framework
 
-`docker compose up -d`
+To run the project, make sure docker is installed, navigate to the root directory
+(where Dockerfile and docker-compose.yml are located), and follow these steps:
 
-To view the www/html/index.php file, navigate in a browser to http://localhost:8008.
+1. Create .env file using .env.example as a template and modify the values where needed (eg DB credentials - used in Docker container).
 
-PHPMyAdmin is also available at http://localhost:8009.
+2. Build the containers:
 
-Database connection details are available in environment variables - see accompanying .env file
+`docker compose up --build -d`
 
-To enter the container and run commands (eg. using composer):
+3. Install necessary composer libraries:
 
-`docker exec -it --user=www-data TwinklTestServer bash`
+`docker-compose exec app composer install`
 
-Feel free to amend the docker configuration and re-build if required 
-(eg. to point to a different directory for the public website files by adding
-a new mounted volume in docker-compose.yml). 
+4. Generate a Laravel key:
 
-XDebug is installed - to use it you will need to set up path mappings in your IDE to 
-point from the location of your local files to the /var folder of the container.
+`docker-compose exec app php artisan key:generate`
+
+Make sure the APP_KEY environment variable is set.
+
+5. Install Laravel application:
+
+`docker-compose exec app php artisan migrate`
+
+6. To access the application, navigate in a browser to http://localhost:8080.
+
+PHPMyAdmin is also available at http://localhost:8081.
+
+## Use the API
+
+Execute an HTTP request with the following parameters:
+
+```
+address: 'http://localhost:8080/api/signup'
+method: 'POST'
+headers: {
+  'Content-Type': 'application/json
+}
+JSON body: {
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "johnny.doe@fantasy.org",
+    "type": "student"
+}
+```
+\* values allowed for type field : 'student', 'teacher', 'parent', 'private_tutor'
+
+Open PHPMyAdmin at http://localhost:8081 to check created users in the users table (select the database configured in .env > DB_DATABASE).
+
+## Test using the API from a blocked IP address
+
+In your .env file set TEST_BLOCKED_IP_ADDRESS to the IP address used to call the API. You should receive an error saying your IP address is blocked.
+
+## Logs
+
+Check confirmation / error log messages in ./storage/logs/laravel.log
+
+## Cleanup
+
+Destroy the containers
+
+`docker-compose down`
+
+To clean up docker build data if needed (eg change db credentials) run first:
+
+`docker volume ls`
+
+then get your docker volume name and use it to run:
+
+`docker volume rm [your-docker-volume-dbdata]`
