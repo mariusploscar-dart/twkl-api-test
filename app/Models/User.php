@@ -3,6 +3,10 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\UserTypes\DefaultType;
+use App\Services\UserTypes\StudentType;
+use App\Services\UserTypes\TeacherType;
+use App\Services\UserTypes\UserTypeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,7 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'user_type',
+        'type',
     ];
 
     /**
@@ -45,5 +49,38 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Sends a confirmation email.
+     *
+     * @return void
+     */
+    public function sendConfirmationEmail(): void
+    {
+        // Get the UserTypeInterface based on the user type
+        $userType = $this->getUserType();
+
+        // Send the email
+        $userType->sendEmail($this);
+    }
+
+    /**
+     * Returns the appropriate UserTypeInterface based on the user's type.
+     *
+     * @return UserTypeInterface The resolved UserTypeInterface implementation.
+     */
+    private function getUserType(): UserTypeInterface
+    {
+        switch ($this->type) {
+            case 'student':
+                return new StudentType();
+            case 'teacher':
+                return new TeacherType();
+            case 'parent':
+            case 'private_tutor':
+            default:
+                return new DefaultType();
+        }
     }
 }

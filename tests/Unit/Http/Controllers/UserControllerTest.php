@@ -19,7 +19,7 @@ class UserControllerTest extends TestCase
             'last_name' => $this->faker->lastName,
             // Avoid invalidating test emails
             'email' => str_replace('example', 'test', $this->faker->unique()->safeEmail),
-            'user_type' => 'student',
+            'type' => 'student',
         ];
 
         // Send a POST request to the signUp endpoint
@@ -32,7 +32,7 @@ class UserControllerTest extends TestCase
         $this->assertDatabaseHas('users', [
             'name' => $data['first_name'] . ' ' . $data['last_name'],
             'email' => $data['email'],
-            'type' => $data['user_type'],
+            'type' => $data['type'],
         ]);
     }
 
@@ -42,7 +42,7 @@ class UserControllerTest extends TestCase
         $data = [
             // Avoid invalidating test emails
             'email' => str_replace('example', 'test', $this->faker->unique()->safeEmail),
-            'user_type' => 'student',
+            'type' => 'student',
         ];
 
         // Send a POST request to the signUp endpoint
@@ -68,7 +68,7 @@ class UserControllerTest extends TestCase
             'last_name' => 'Invalid Last Name12345',
             // Avoid invalidating test emails
             'email' => str_replace('example', 'test', $this->faker->unique()->safeEmail),
-            'user_type' => 'student',
+            'type' => 'student',
         ];
 
         // Send a POST request to the signUp endpoint
@@ -90,7 +90,7 @@ class UserControllerTest extends TestCase
             'first_name' => $this->faker->firstName,
             'last_name' => $this->faker->lastName,
             'email' => 'not!valid@email',
-            'user_type' => 'student',
+            'type' => 'student',
         ];
 
         // Send a POST request to the signUp endpoint
@@ -107,14 +107,14 @@ class UserControllerTest extends TestCase
         ]);
     }
 
-    public function test_signup_invalid_user_type()
+    public function test_signup_invalid_type()
     {
         // Create a valid request data with an invalid user type
         $data = [
             'first_name' => $this->faker->firstName,
             'last_name' => $this->faker->lastName,
             'email' => $this->faker->unique()->safeEmail,
-            'user_type' => 'invalid_user_type',
+            'type' => 'invalid_type',
         ];
 
         // Send a POST request to the signUp endpoint
@@ -126,7 +126,7 @@ class UserControllerTest extends TestCase
         // Assert that the response contains validation errors
         $response->assertJsonStructure([
             'error' => [
-                'user_type'
+                'type'
             ],
         ]);
     }
@@ -142,7 +142,7 @@ class UserControllerTest extends TestCase
             'first_name' => $this->faker->firstName,
             'last_name' => $this->faker->lastName,
             'email' => $this->faker->unique()->safeEmail,
-            'user_type' => 'student',
+            'type' => 'student',
         ];
 
         // Send a POST request to the signUp endpoint from the blocked IP address

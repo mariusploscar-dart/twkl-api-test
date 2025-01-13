@@ -69,14 +69,18 @@ JSON body: {
     "first_name": "John",
     "last_name": "Doe",
     "email": "johnny.doe@fantasy.org",
-    "user_type": "student"
+    "type": "student"
 }
 ```
-\* values allowed for user_type field : 'student', 'teacher', 'parent', 'private_tutor'
+\* values allowed for type field : 'student', 'teacher', 'parent', 'private_tutor'
 
 ## Test using the API from a blocked IP address
 
 In your .env file set TEST_BLOCKED_IP_ADDRESS to the IP address used to call the API. You should receive an error saying your IP address is blocked.
+
+## Logs
+
+Check confirmation / error log messages in ./storage/logs/laravel.log
 
 ## Cleanup
 

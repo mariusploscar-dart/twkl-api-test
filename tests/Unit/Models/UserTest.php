@@ -19,7 +19,7 @@ class UserTest extends TestCase
             'name',
             'email',
             'password',
-            'user_type',
+            'type',
         ], $fillable);
     }
 

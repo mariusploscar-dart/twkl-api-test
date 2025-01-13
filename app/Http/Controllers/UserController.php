@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -19,10 +21,13 @@ class UserController extends Controller
      *
      * @throws \Exception If an error occurs while creating the user.
      */
-    public function signUp(Request $request)
+    public function signUp(Request $request): JsonResponse
     {
         // Return immediately if request is from a blocked IP address
         if ($this->isIpBlocked($request->ip())) {
+            // Log the event
+            Log::error('A request from the following IP address ' . $request->ip() . ' has been blocked!');
+
             return response()->json(['error' => 'Your IP address (' . $request->ip() . ') is blocked'], 403);
         }
 
@@ -31,7 +36,7 @@ class UserController extends Controller
             'first_name' => 'required|string',
             'last_name' => 'required|string',
             'email' => 'required|email:rfc,dns|unique:users',
-            'user_type' => 'required|in:student,teacher,parent,private_tutor',
+            'type' => 'required|in:student,teacher,parent,private_tutor',
         ]);
 
         if ($validator->fails()) {
@@ -53,15 +58,18 @@ class UserController extends Controller
             $user = User::create([
                 'name' => $request->first_name . ' ' . $request->last_name,
                 'email' => $request->email,
-                'type' => $request->user_type,
+                'type' => $request->type,
                 'password' => $password,
             ]);
+
+            // Log the event
+            Log::info('User created with the following email: ' . $user->email);
+
+            // Send confirmation email
+            $this->sendConfirmationEmail($user);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to create user' . $e->getMessage()], 500);
         }
-
-        // todo: send notification email
-
 
         return response()->json(['message' => 'User signed up successfully'], 201);
     }
@@ -75,7 +83,7 @@ class UserController extends Controller
      *
      * @throws \Exception If the regular expression fails to compile.
      */
-    private function validateName($string)
+    private function validateName($string): bool
     {
         // Define the allowed characters in the name
         $allowedCharacters = '/^[a-zA-Z\s\']+$/';
@@ -95,7 +103,7 @@ class UserController extends Controller
      *
      * @return bool Returns true if the IP address is blocked, false otherwise.
      */
-    private function isIpBlocked($ip)
+    private function isIpBlocked($ip): bool
     {
         // Define the list of blocked IP addresses
         $blockedIPs = [
@@ -106,5 +114,17 @@ class UserController extends Controller
 
         // Check if the given IP address is in the blocked IPs array
         return in_array($ip, $blockedIPs);
+    }
+
+    /**
+     * Sends a notification email to the newly created user.
+     *
+     * @param User $user The newly created user.
+     *
+     * @return void
+     */
+    private function sendConfirmationEmail(User $user): void
+    {
+        $user->sendConfirmationEmail();
     }
 }
