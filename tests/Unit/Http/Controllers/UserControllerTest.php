@@ -17,7 +17,8 @@ class UserControllerTest extends TestCase
         $data = [
             'first_name' => $this->faker->firstName,
             'last_name' => $this->faker->lastName,
-            'email' => $this->faker->unique()->safeEmail,
+            // Avoid invalidating test emails
+            'email' => str_replace('example', 'test', $this->faker->unique()->safeEmail),
             'user_type' => 'student',
         ];
 
@@ -39,7 +40,8 @@ class UserControllerTest extends TestCase
     {
         // Create an invalid request data (missing required fields)
         $data = [
-            'email' => $this->faker->unique()->safeEmail,
+            // Avoid invalidating test emails
+            'email' => str_replace('example', 'test', $this->faker->unique()->safeEmail),
             'user_type' => 'student',
         ];
 
@@ -64,8 +66,9 @@ class UserControllerTest extends TestCase
         $data = [
             'first_name' => $this->faker->firstName,
             'last_name' => 'Invalid Last Name12345',
-            'email' => $this->faker->unique()->safeEmail,
-            'type' => 'student',
+            // Avoid invalidating test emails
+            'email' => str_replace('example', 'test', $this->faker->unique()->safeEmail),
+            'user_type' => 'student',
         ];
 
         // Send a POST request to the signUp endpoint
@@ -87,7 +90,7 @@ class UserControllerTest extends TestCase
             'first_name' => $this->faker->firstName,
             'last_name' => $this->faker->lastName,
             'email' => 'not!valid@email',
-            'type' => 'student',
+            'user_type' => 'student',
         ];
 
         // Send a POST request to the signUp endpoint
@@ -97,6 +100,60 @@ class UserControllerTest extends TestCase
         $response->assertStatus(400);
 
         // Assert that the response contains validation errors
+        $response->assertJsonStructure([
+            'error' => [
+                'email'
+            ],
+        ]);
+    }
+
+    public function test_signup_invalid_user_type()
+    {
+        // Create a valid request data with an invalid user type
+        $data = [
+            'first_name' => $this->faker->firstName,
+            'last_name' => $this->faker->lastName,
+            'email' => $this->faker->unique()->safeEmail,
+            'user_type' => 'invalid_user_type',
+        ];
+
+        // Send a POST request to the signUp endpoint
+        $response = $this->post('/api/signup', $data);
+
+        // Assert that the response status is 400 (Bad Request)
+        $response->assertStatus(400);
+
+        // Assert that the response contains validation errors
+        $response->assertJsonStructure([
+            'error' => [
+                'user_type'
+            ],
+        ]);
+    }
+
+    public function test_signup_blocked_ip()
+    {
+        // Set the blocked IP address in the environment variable
+        $blockedIp = '127.0.0.1';
+        putenv("TEST_BLOCKED_IP_ADDRESS=$blockedIp");
+
+        // Create a valid request data
+        $data = [
+            'first_name' => $this->faker->firstName,
+            'last_name' => $this->faker->lastName,
+            'email' => $this->faker->unique()->safeEmail,
+            'user_type' => 'student',
+        ];
+
+        // Send a POST request to the signUp endpoint from the blocked IP address
+        $response = $this->withHeaders([
+            'X-FORWARDED-FOR' => $blockedIp,
+        ])->post('/api/signup', $data);
+
+        // Assert that the response status is 403 (Forbidden)
+        $response->assertStatus(403);
+
+        // Assert that the response contains an error message indicating the blocked IP address
         $response->assertJsonStructure([
             'error',
         ]);
