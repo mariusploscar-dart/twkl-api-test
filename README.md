@@ -74,6 +74,8 @@ JSON body: {
 ```
 \* values allowed for type field : 'student', 'teacher', 'parent', 'private_tutor'
 
+Open PHPMyAdmin at http://localhost:8081 to check created users in the users table (select the database configured in .env > DB_DATABASE).
+
 ## Test using the API from a blocked IP address
 
 In your .env file set TEST_BLOCKED_IP_ADDRESS to the IP address used to call the API. You should receive an error saying your IP address is blocked.
